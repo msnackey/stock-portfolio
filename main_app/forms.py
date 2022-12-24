@@ -5,7 +5,8 @@ import yfinance as yf
 
 
 class InvestmentForm(dj_forms.Form):
-    investment_value = dj_forms.IntegerField(label='Investment')
+    investment_value = dj_forms.IntegerField(label='Investment',
+                                             widget=dj_forms.TextInput(attrs={'style': 'width:100px'}))
 
 
 class StockForm(dj_forms.Form):
