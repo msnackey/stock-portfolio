@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+  <!--Modal that gets used for adding and editing stocks, gets called by the JS functions at the bottom-->
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content"></div>
+    </div>
+  </div>
+
+  <!--Small top row for add and refresh buttons and the last updated data-->
+  <div class="container bottom-padding">
+    <div class="row">
+      <div class="col-2">
+        <!--Add button-->
+        <button type="button" class="btn btn-sm btn-custom" id="add-stock">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg>
+        </button>
+        <!--Refresh button-->
+        <form method="post" style="display: inline-block;">
+          {% csrf_token %}
+          {{ form }}
+          <button type="submit" class="btn btn-sm btn-custom">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+              <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+              <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+          </svg>
+          </button>
+        </form>
+      </div>
+      <div class="col col-right right">
+        <h8 class="text-sm">Last updated: {{ update_date }}</h8>
+      </div>
+    </div>
+  </div>
+
+  <!--Main view where each stock gets a row-->
+  {% for stock in object_list %}
+    <div class="row table-row">
+      <!--Left side of the view contains the name, ticker, price and number of current shares-->
+      <div class="col-8 rel">
+        <!--Stock product name over max two lines. Adds ellipses if string is too long.-->
+        <div class="row max-two-lines">
+          <h5>{{ stock.product }}</h5>
+        </div>
+        <!--Stock ticker, current price and current number of shares, bottomed out in the table row-->
+        <div class="row bottomed">
+          <h7>{{ stock.ticker }} | € {{ stock.price|cur:"3" }} <span class="text-sm">x</span> {{ stock.shares }}</h7>
+        </div>
+      </div>
+      <!--Right side of the view contains the invest, edit and delete buttons, the current value and the
+      difference since last updating-->
+      <div class="col right">
+        <!--Invest, edit and delete buttons-->
+        <div class="btn-group" role="group">
+          <!--Shopping bag icons. Shows with a check if stock.invest = True, otherwise it's an empty bag.-->
+          {% if stock.invest %}
+            <button type="button" class="btn btn-sm btn-custom">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-bag-fill" viewBox="0 0 16 16">
+                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5z"/>
+              </svg>
+            </button>
+          {% else %}
+            <button type="button" class="btn btn-sm btn-custom">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+              </svg>
+            </button>
+          {% endif %}
+          <!--Edit button-->
+          <button type="button" class="btn btn-sm btn-custom edit-stock" data-form-url="{% url 'main_app:edit_stock' stock.pk %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+              <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+            </svg>
+          </button>
+          <!--Delete button-->
+          <button type="button" class="btn btn-sm btn-custom delete-stock" data-form-url="{% url 'main_app:delete_stock' stock.pk %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+              <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+            </svg>
+          </button>
+        </div>
+        <!--Current stock value and difference since last updating-->
+        <div class="row">
+          <h5 class="top-padding">€ {{ stock.value|cur:"2" }}</h5>
+          <h7 class="text-sm {% if stock.value_change < 0 %} negative {% elif stock.value_change > 0 %} positive {% endif %}">€ {{ stock.value_change|cur:"2" }} ({{ stock.price_change_perc|num:"2" }}%)</h7>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+
+  <div class="row theme divider"></div>
+
+  <script type="text/javascript">
+    // Calling the add stock view
+    $(function() {
+      $("#add-stock").modalForm({
+        modalID: "#modal",
+        formURL: "{% url 'main_app:add_stock' %}",
+      });
+
+      // Delete stock button - formURL is retrieved from the data of the element
+          function deleteStockModalForm() {
+            $(".delete-stock").each(function () {
+                $(this).modalForm({formURL: $(this).data("form-url"), isDeleteForm: true});
+            });
+          }
+          deleteStockModalForm();
+
+      // Edit stock button - formURL is retrieved from the data of the element
+          function editStockModalForm() {
+            $(".edit-stock").each(function () {
+                $(this).modalForm({formURL: $(this).data("form-url")});
+            });
+          }
+          editStockModalForm();
+    });
+  </script>
+{% endblock %}

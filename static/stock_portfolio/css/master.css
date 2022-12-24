@@ -1,0 +1,92 @@
+/*Test css*/
+.test{
+  border: 2px solid black;
+}
+
+/*Actual*/
+body{
+  background: #f0f0f0;
+  font-family: Montserrat, Helvetica, Arial, sans-serif;
+}
+
+.theme{
+  background: #048f83;
+  color: white;
+}
+
+.max-two-lines{
+   overflow: hidden;
+   text-overflow: ellipsis;
+   display: -webkit-box;
+   -webkit-box-orient: vertical;
+   -webkit-line-clamp: 2; /* number of lines to show */
+   line-height: 1.5em;    /* fallback */
+   max-height: 3em;       /* fallback */
+}
+
+.right{
+  text-align: right;
+  margin-right: 0px;
+}
+
+.left{
+  text-align: left;
+  margin-left: 0px;
+}
+
+.table-row{
+  height: 110px;
+  border-top: 1px solid black;
+}
+
+.divider{
+  height: 40px;
+  border-top: 1px solid black;
+}
+
+.text-sm{
+  font-size: 0.8em;
+  line-height: 0.5em;
+}
+
+.btn-custom{
+  --bs-btn-padding-x: 2px;
+  --bs-btn-padding-y: 2px;
+}
+
+.top-padding{
+  padding-top: 10px;
+}
+
+.bottom-padding{
+  padding-bottom: 2px;
+}
+
+.col-right{
+  display: flex;
+  justify-content: right;
+  align-items: center;
+}
+
+.rel{
+  position: relative;
+}
+
+.bottomed{
+  position: absolute;
+  bottom: 0;
+}
+
+.centered{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.negative{
+  color: red;
+}
+
+.positive{
+  color: green;
+}

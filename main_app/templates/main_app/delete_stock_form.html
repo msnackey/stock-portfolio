@@ -1,0 +1,19 @@
+<form method="post">
+  {% csrf_token %}
+
+  <div class="modal-header">
+    <h1 class="modal-title fs-5">Delete stock</h1>
+  </div>
+
+  <div class="modal-body">
+    <div class="row">
+      <p class="delete-text"> Are you sure you want to delete the {{ stock.product }} stock?</p>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+    <button type="submit" id="delete-btn" class="btn btn-danger">Delete</button>
+  </div>
+
+</form>
