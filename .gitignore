@@ -1,3 +1,4 @@
 /.env
-/db.sqlite3
-/stock_portfolio/settings_acc.py
+/db_dev.sqlite3
+/stock_portfolio/settings/acceptance.py
+/stock_portfolio/settings/development.py
