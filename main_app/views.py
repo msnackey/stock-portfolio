@@ -17,7 +17,7 @@ from . import models, forms
 
 
 # Create your views here.
-class StockListView(LoginRequiredMixin,generic.ListView):
+class StockListView(LoginRequiredMixin, generic.ListView):
     template_name = 'main_app/list.html'
     model = models.Stock
 
@@ -31,7 +31,7 @@ class StockListView(LoginRequiredMixin,generic.ListView):
         return context
 
 
-class StockCreateView(LoginRequiredMixin,BSModalCreateView):
+class StockCreateView(LoginRequiredMixin, BSModalCreateView):
     template_name = 'main_app/stock_form.html'
     form_class = forms.StockModelForm
     success_url = reverse_lazy('main_app:list')
@@ -54,20 +54,20 @@ class StockCreateView(LoginRequiredMixin,BSModalCreateView):
         return super().form_valid(form)
 
 
-class StockUpdateView(StockCreateView,BSModalUpdateView):
+class StockUpdateView(StockCreateView, BSModalUpdateView):
     model = models.Stock
     template_name = 'main_app/update_stock_form.html'
     form_class = forms.StockModelForm
     success_url = reverse_lazy('main_app:list')
 
 
-class StockDeleteView(LoginRequiredMixin,BSModalDeleteView):
+class StockDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = models.Stock
     template_name = 'main_app/delete_stock_form.html'
     success_url = reverse_lazy('main_app:list')
 
 
-class StockFormView(LoginRequiredMixin,generic.FormView):
+class StockFormView(LoginRequiredMixin, generic.FormView):
     template_name = 'main_app/list.html'
     form_class = forms.StockForm
     success_url = reverse_lazy('main_app:list')
@@ -109,7 +109,7 @@ class StockFormView(LoginRequiredMixin,generic.FormView):
 
 # A combination view to generate the generic list view on get requests and generate the form view (i.e. the updating
 # all stocks view) on post requests.
-class StockView(LoginRequiredMixin,generic.View):
+class StockView(LoginRequiredMixin, generic.View):
     def get(self, request, *args, **kwargs):
         view = StockListView.as_view()
         return view(request, *args, **kwargs)
@@ -119,14 +119,14 @@ class StockView(LoginRequiredMixin,generic.View):
         return view(request, *args, **kwargs)
 
 
-class CategoryUpdateView(LoginRequiredMixin,BSModalUpdateView):
+class CategoryUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = models.Category
     template_name = 'main_app/update_category_form.html'
     form_class = forms.CategoryModelForm
     success_url = reverse_lazy('main_app:invest')
 
 
-class CategoryInvestView(LoginRequiredMixin,generic.ListView):
+class CategoryInvestView(LoginRequiredMixin, generic.ListView):
     template_name = 'main_app/invest.html'
     model = models.Category
 
@@ -179,7 +179,7 @@ class CategoryInvestView(LoginRequiredMixin,generic.ListView):
         return context
 
 
-class InvestmentFormView(LoginRequiredMixin,generic.FormView):
+class InvestmentFormView(LoginRequiredMixin, generic.FormView):
     template_name = 'main_app/invest.html'
     form_class = forms.InvestmentForm
     success_url = reverse_lazy('main_app:invest')
@@ -192,7 +192,7 @@ class InvestmentFormView(LoginRequiredMixin,generic.FormView):
 
 # A combination view to generate the generic list view on get requests and generate the form view (i.e. inputting the
 # investment value) on post requests.
-class InvestView(LoginRequiredMixin,generic.View):
+class InvestView(LoginRequiredMixin, generic.View):
     def get(self, request, *args, **kwargs):
         view = CategoryInvestView.as_view()
         return view(request, *args, **kwargs)
