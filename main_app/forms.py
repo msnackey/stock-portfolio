@@ -16,11 +16,14 @@ class StockForm(dj_forms.Form):
 class StockModelForm(forms.BSModalModelForm):
     class Meta:
         model = models.Stock
-        fields = ('ticker', 'category', 'sri', 'invest', 'shares', )
+        fields = ('ticker', 'category', 'sri', 'invest', 'shares',)
         labels = {'sri': 'SRI'}
         help_texts = {'ticker': 'e.g. ABCD.EF', }
 
     def clean(self):
+        """Overwriting the default clean method to obtain additional information with the yfinance package.
+        It gets the stock name, currency, exchange and current price, if the ticker is valid.
+        It raises an error if the ticker is invalid."""
         cleaned_data = self.cleaned_data
         try:
             stock_data = yf.Ticker(cleaned_data['ticker']).info
@@ -36,4 +39,4 @@ class StockModelForm(forms.BSModalModelForm):
 class CategoryModelForm(forms.BSModalModelForm):
     class Meta:
         model = models.Category
-        fields = ('target', )
+        fields = ('target',)
