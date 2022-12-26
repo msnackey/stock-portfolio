@@ -22,6 +22,8 @@ class StockListView(LoginRequiredMixin,generic.ListView):
     model = models.Stock
 
     def get_context_data(self, **kwargs):
+        """Adds keys to the context dictionary, namely the total stock value (sum), the stock form (for refreshing),
+        and the update date (datetime of last refreshing, based on the browser cookie)."""
         context = super(StockListView, self).get_context_data(**kwargs)
         context['sum'] = models.Stock.objects.sum_all()
         context['form'] = forms.StockForm()
@@ -71,15 +73,24 @@ class StockFormView(LoginRequiredMixin,generic.FormView):
     success_url = reverse_lazy('main_app:list')
 
     def post(self, request, *args, **kwargs):
+        """Updating all the existing stocks' data."""
+        # Set the datetime of the update
         dt_update = datetime.now()
+        # If an update has been done before (i.e. there is a cookie present with an update_date),
+        # determine the time between updates. If not, set it at 2 days.
         try:
             dt_last_update = datetime.strptime(request.session['update_date'], "%d/%m/%Y %H:%M")
         except:
             dt_last_update = dt_update - timedelta(days=2)
+        # Update the browser cookie update_date
         request.session['update_date'] = dt_update.strftime("%d/%m/%Y %H:%M")
+        # Update all stock fields
         for stock in models.Stock.objects.all():
             stock_data = stock.get_stock_data()
             try:
+                # If the last update was more than 24 hours ago, update the stock.prev_price with the current price.
+                # This makes it so that the price and value changes afterwards are calculated over at least a >24h
+                # period.
                 if ((dt_update - dt_last_update).total_seconds() / 3600) > 24:
                     stock.prev_price = stock.price
                 stock.product = stock_data['longName']
@@ -96,6 +107,8 @@ class StockFormView(LoginRequiredMixin,generic.FormView):
         return super().post(request, *args, **kwargs)
 
 
+# A combination view to generate the generic list view on get requests and generate the form view (i.e. the updating
+# all stocks view) on post requests.
 class StockView(LoginRequiredMixin,generic.View):
     def get(self, request, *args, **kwargs):
         view = StockListView.as_view()
@@ -118,10 +131,13 @@ class CategoryInvestView(LoginRequiredMixin,generic.ListView):
     model = models.Category
 
     def get_queryset(self):
+        """Calculate the investment value for each category and determine the amount of stocks this needs to be divided
+        over. Adds these values to the queryset."""
+        # Get the investment value from the browser cookie. If it is not an integer, sets the investment_value to 0.
         investment_value = self.request.session.get('investment_value')
         if not isinstance(investment_value, int):
             investment_value = 0
-
+        # Adds the investment value and number of investment stocks to each category.
         qs = models.Category.objects.annotate(
             cat_invest_value=(models.Stock.objects.sum_all() + investment_value) * Avg('target') / 100 - Coalesce(
                 Sum('stocks__value'), 0, output_field=DecimalField()),
@@ -130,25 +146,36 @@ class CategoryInvestView(LoginRequiredMixin,generic.ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+        """Adds keys to the context dictionary, namely the total stock value (sum), the investment form (form), and
+        the stock list where the invest-field = True (stock_list)."""
         context = super(CategoryInvestView, self).get_context_data(**kwargs)
         context['sum'] = models.Stock.objects.sum_all()
 
+        # Adds the InvestmentForm to the context dictionary, using if available the browser cookie investment_value
+        # to fill the form field with an initial value.
         investment_value = self.request.session.get('investment_value')
         if not isinstance(investment_value, int):
             investment_value = 0
         context['form'] = forms.InvestmentForm(initial={'investment_value': investment_value})
 
+        # Gets all stocks where the invest-field = True.
         qs_stock = models.Stock.objects.filter(invest=True)
-
         try:
             for stock in qs_stock:
-                cat = context['object_list'].get(pk=stock.category_id)
-                stock.stock_invest_value = cat.cat_invest_value / cat.no_of_invest_stocks
-                stock.stock_invest_shares = stock.stock_invest_value / stock.price
+                try:
+                    # Determines the category.
+                    cat = context['object_list'].get(pk=stock.category_id)
+                    # Calculates the investment value for the stock, based on the investment value of the category
+                    # and the number of investment stocks over which to divide.
+                    stock.stock_invest_value = cat.cat_invest_value / cat.no_of_invest_stocks
+                    # Calculates the amount of shares to invest in, based on the investment value and the stock price.
+                    stock.stock_invest_shares = stock.stock_invest_value / stock.price
+                except:
+                    print('Adding stock_invest_value failed')
         except:
-            print('Adding stock_invest_value failed')
-
+            print('No stocks found')
         context['stock_list'] = qs_stock
+
         return context
 
 
@@ -157,16 +184,14 @@ class InvestmentFormView(LoginRequiredMixin,generic.FormView):
     form_class = forms.InvestmentForm
     success_url = reverse_lazy('main_app:invest')
 
-    def get_context_data(self, **kwargs):
-        context = super(InvestmentFormView, self).get_context_data(**kwargs)
-        context['sum'] = models.Stock.objects.sum_all()
-        return context
-
     def post(self, request, *args, **kwargs):
+        """Adds the investment value that was posted to the browser cookie investment_value."""
         request.session['investment_value'] = int(request.POST['investment_value'])
         return super().post(request, *args, **kwargs)
 
 
+# A combination view to generate the generic list view on get requests and generate the form view (i.e. inputting the
+# investment value) on post requests.
 class InvestView(LoginRequiredMixin,generic.View):
     def get(self, request, *args, **kwargs):
         view = CategoryInvestView.as_view()

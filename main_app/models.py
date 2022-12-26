@@ -15,6 +15,7 @@ class Category(models.Model):
         return reverse('main_app:invest')
 
     def calc_cat_value(self):
+        """Calculates the total value of the stocks of this category."""
         value = 0
         stocks = self.stocks.all()
         for stock in stocks:
@@ -22,28 +23,30 @@ class Category(models.Model):
         return value
 
     def perc(self):
+        """Calculates the percentage of the category value in relation to the total value."""
+        # Get the category value
         cat_value = self.calc_cat_value()
-        sum = 0
-        for product in Stock.objects.all():
-            value = product.shares * product.price
-            sum = sum + value
-
-        if sum == 0:
+        # Get the total stock value
+        value_sum = StockManager.sum_all()
+        # If the total stock value is 0, return 0 (otherwise you will get a division error)
+        if value_sum == 0:
             return 0
-
-        return cat_value/sum*100
+        return cat_value/value_sum*100
 
     def perc_delta(self):
+        """Calculates the delta of the current percentage and the target percentage of the category."""
         return self.perc() - self.target
 
 
 class StockManager(models.Manager):
-    def sum_all(self):
-        sum = 0
+    @staticmethod
+    def sum_all():
+        """Calculates the total value of all stocks."""
+        value_sum = 0
         for stock in Stock.objects.all():
             value = stock.shares * stock.price
-            sum = sum + value
-        return sum
+            value_sum = value_sum + value
+        return value_sum
 
 
 class Stock(models.Model):
@@ -61,6 +64,7 @@ class Stock(models.Model):
     price_change_perc = models.DecimalField(max_digits=19, decimal_places=10, default=0)
     value_change = models.DecimalField(max_digits=19, decimal_places=10, default=0)
 
+    # Links the StockManager class so it inherits the custom methods
     objects = StockManager()
 
     def __str__(self):
@@ -70,9 +74,11 @@ class Stock(models.Model):
         return reverse('main_app:list')
 
     def calc_value(self):
+        """Calculates the value of the stock."""
         value = self.shares * self.price
         return value
 
     def get_stock_data(self):
+        """Gets the stock data with the yfinance package using the stock ticker."""
         info = yf.Ticker(self.ticker).info
         return info
