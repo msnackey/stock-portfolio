@@ -40,12 +40,13 @@ class StockCreateView(LoginRequiredMixin, BSModalCreateView):
     def form_valid(self, form):
         """If the form is valid, save the associated model and lookup the stock data."""
         self.object = form.save(commit=False)
-        stock_data = self.object.get_stock_data()
+        stock_info = self.object.get_stock_info()
+        stock_price = self.object.get_stock_price()
         try:
-            self.object.product = stock_data['longName']
-            self.object.currency = stock_data['currency']
-            self.object.exchange = stock_data['exchange']
-            self.object.price = stock_data['regularMarketPrice']
+            self.object.product = stock_info['longName']
+            self.object.currency = stock_info['currency']
+            self.object.exchange = stock_info['exchange']
+            self.object.price = stock_price.iloc[0]["Close"]
             self.object.value = self.object.price * self.object.shares
         except:
             messages.error(self.request, self.error_message)
@@ -86,17 +87,18 @@ class StockFormView(LoginRequiredMixin, generic.FormView):
         request.session['update_date'] = dt_update.strftime("%d/%m/%Y %H:%M")
         # Update all stock fields
         for stock in models.Stock.objects.all():
-            stock_data = stock.get_stock_data()
+            stock_info = stock.get_stock_info()
+            stock_price = stock.get_stock_price()
             try:
                 # If the last update was more than 24 hours ago, update the stock.prev_price with the current price.
                 # This makes it so that the price and value changes afterwards are calculated over at least a >24h
                 # period.
                 if ((dt_update - dt_last_update).total_seconds() / 3600) > 24:
                     stock.prev_price = stock.price
-                stock.product = stock_data['longName']
-                stock.currency = stock_data['currency']
-                stock.exchange = stock_data['exchange']
-                stock.price = Decimal(stock_data['regularMarketPrice'])
+                stock.product = stock_info['longName']
+                stock.currency = stock_info['currency']
+                stock.exchange = stock_info['exchange']
+                stock.price = Decimal(stock_price.iloc[0]["Close"])
                 stock.value = stock.price * stock.shares
                 stock.price_change_perc = (stock.price - stock.prev_price) / stock.prev_price * 100
                 stock.value_change = (stock.price - stock.prev_price) * stock.shares
