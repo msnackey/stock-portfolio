@@ -26,11 +26,12 @@ class StockModelForm(forms.BSModalModelForm):
         It raises an error if the ticker is invalid."""
         cleaned_data = self.cleaned_data
         try:
-            stock_data = yf.Ticker(cleaned_data['ticker']).info
-            cleaned_data['product'] = stock_data['longName']
-            cleaned_data['currency'] = stock_data['currency']
-            cleaned_data['exchange'] = stock_data['exchange']
-            cleaned_data['price'] = stock_data['regularMarketPrice']
+            stock_info = yf.Ticker(cleaned_data['ticker']).info
+            cleaned_data['product'] = stock_info['longName']
+            cleaned_data['currency'] = stock_info['currency']
+            cleaned_data['exchange'] = stock_info['exchange']
+            stock_price = yf.Ticker(cleaned_data['ticker']).history(period="1d")
+            cleaned_data['price'] = stock_price.iloc[0]["Close"]
         except:
             self.add_error('ticker', 'Ticker is not valid.')
         return cleaned_data
