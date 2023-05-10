@@ -78,7 +78,12 @@ class Stock(models.Model):
         value = self.shares * self.price
         return value
 
-    def get_stock_data(self):
+    def get_stock_info(self):
         """Gets the stock data with the yfinance package using the stock ticker."""
         info = yf.Ticker(self.ticker).info
         return info
+
+    def get_stock_price(self):
+        """Gets the stock data with the yfinance package using the stock ticker."""
+        price = yf.Ticker(self.ticker).history(period="1d")
+        return price
